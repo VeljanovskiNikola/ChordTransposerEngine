@@ -312,6 +312,23 @@ public struct ChordTokenizer: ChordParsing, Sendable {
                         continue // skip — will be caught by "maj", "min", "mi"
                     }
                 }
+                // Don't consume "maj"/"Maj" when followed by a digit (e.g., "maj7").
+                // "maj7" is a single extension token meaning major seventh, not
+                // a quality prefix "maj" + extension "7".
+                if (pattern == "maj" || pattern == "Maj") && input.count > consumed {
+                    let afterPattern = input[input.index(input.startIndex, offsetBy: consumed)]
+                    if afterPattern.isNumber {
+                        return (.major, 0)
+                    }
+                }
+                // Don't consume "M" as quality when followed by a digit (e.g., "M7").
+                // "M7" is a single extension meaning major seventh.
+                if pattern == "M" && input.count > consumed {
+                    let afterPattern = input[input.index(input.startIndex, offsetBy: consumed)]
+                    if afterPattern.isNumber {
+                        return (.major, 0)
+                    }
+                }
                 return (quality, consumed)
             }
         }
